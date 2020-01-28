@@ -1,8 +1,8 @@
-// TODO  Extension context invalidated.の解決
-
 // hrefに"data" URL scheme を設定している場合、
 // loadを待たないと値が取得できなかったの loadのタイミングで実行する
 window.addEventListener("load", () => {
+  const isMac = navigator.userAgent.indexOf("Mac OS X") != -1;
+
   const links = [...document.querySelectorAll("link[rel~='icon']")];
 
   // faviconが未設定の場合は、デフォルトファビコンを設定する
@@ -18,23 +18,17 @@ window.addEventListener("load", () => {
   // --- event listenrの設定 ---
   // ---------------------------
   document.addEventListener("keydown", event => {
-    if (event.key === "Meta") {
-      // TODO keyの設定
-      sendChangeMsg();
-    }
+    if (isClickedCtrl(event)) sendChangeMsg();
   });
   document.addEventListener("keyup", event => {
-    if (event.key === "Meta") {
-      // TODO keyの設定
-      sendRevertMsg();
-    }
+    if (isClickedCtrl(event)) sendRevertMsg();
   });
 
   window.addEventListener("unload", sendChangeMsg);
   window.addEventListener("blur", sendRevertMsg);
 
   chrome.runtime.onMessage.addListener(message => {
-    if (message.type === "changeFavicon") {
+    if (message.type === "change") {
       changeFavicon(message.index);
     } else {
       revertFavicon();
@@ -44,6 +38,11 @@ window.addEventListener("load", () => {
   // ----------------
   // --- function ---
   // ----------------
+  function isClickedCtrl(event) {
+    // windows 対応
+    return isMac && event.key === "Meta";
+  }
+
   function sendChangeMsg() {
     chrome.runtime.sendMessage({ event: "change" });
   }
@@ -60,6 +59,7 @@ window.addEventListener("load", () => {
   }
 
   function changeFavicon(index) {
+    console.log(links);
     // extentionのfaviconを取得
     const url = chrome.runtime.getURL(`images/favicon-${index}.ico`);
     links.forEach(link => link.setAttribute("href", url));

@@ -13,11 +13,11 @@ chrome.runtime.onMessage.addListener(msg => {
 // --- function ---
 // ----------------
 function sendChangeFaviconEvent(tabId, tabIndex) {
-  chrome.tabs.sendMessage(tabId, { type: "changeFavicon", index: tabIndex });
+  chrome.tabs.sendMessage(tabId, { type: "change", index: tabIndex });
 }
 
 function sendRevertFaviconEvent(tabId) {
-  chrome.tabs.sendMessage(tabId, { type: "revertFavicon" });
+  chrome.tabs.sendMessage(tabId, { type: "revert" });
 }
 
 function operateTabs(callback) {
