@@ -1,6 +1,7 @@
 // hrefに"data" URL scheme を設定している場合、
 // loadを待たないと値が取得できなかったの loadのタイミングで実行する
 window.addEventListener("load", () => {
+  let isShowing = false;
   const isMac = navigator.userAgent.indexOf("Mac OS X") != -1;
 
   const links = [...document.querySelectorAll("link[rel~='icon']")];
@@ -19,12 +20,13 @@ window.addEventListener("load", () => {
   // ---------------------------
   document.addEventListener("keydown", event => {
     if (isClickedCtrl(event)) sendChangeMsg();
+    else sendRevertMsg();
   });
-  document.addEventListener("keyup", event => {
-    if (isClickedCtrl(event)) sendRevertMsg();
+  document.addEventListener("keyup", () => {
+    sendRevertMsg();
   });
 
-  window.addEventListener("unload", sendChangeMsg);
+  window.addEventListener("unload", sendRevertMsg);
   window.addEventListener("blur", sendRevertMsg);
 
   chrome.runtime.onMessage.addListener(message => {
@@ -44,11 +46,11 @@ window.addEventListener("load", () => {
   }
 
   function sendChangeMsg() {
-    chrome.runtime.sendMessage({ event: "change" });
+    if (!isShowing) chrome.runtime.sendMessage({ event: "change" });
   }
 
   function sendRevertMsg() {
-    chrome.runtime.sendMessage({ event: "revert" });
+    if (isShowing) chrome.runtime.sendMessage({ event: "revert" });
   }
 
   function createLink(url) {
@@ -59,13 +61,14 @@ window.addEventListener("load", () => {
   }
 
   function changeFavicon(index) {
-    console.log(links);
     // extentionのfaviconを取得
     const url = chrome.runtime.getURL(`images/favicon-${index}.ico`);
     links.forEach(link => link.setAttribute("href", url));
+    isShowing = true;
   }
 
   function revertFavicon() {
     links.forEach((link, i) => link.setAttribute("href", originalUrl[i]));
+    isShowing = false;
   }
 });
